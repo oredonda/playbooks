@@ -1,0 +1,5 @@
+[controlnode]
+localhost ansible_connection=local
+
+[intranetweb]
+vm-19-node1-ansible
