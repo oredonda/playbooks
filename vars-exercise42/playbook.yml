@@ -1,0 +1,54 @@
+---
+- name: Install Web Server
+  hosts: webserver
+  vars:
+    web_pkg: httpd
+    firewall_pkg: firewalld
+    web_service: httpd
+    firewall_service: firewalld
+    python_pkg: wget
+    rule: http
+  become: yes
+  tasks:
+
+    - name: Ensure installed packages
+      ansible.builtin.dnf:
+        name:
+          - "{{ web_pkg }}"
+          - "{{ firewall_pkg }}"
+        state: present
+
+    - name: Ensure enabled and running "{{ web_service }}"
+      ansible.builtin.service:
+        name: "{{ web_service }}"
+        state: started
+        enabled: yes
+
+    - name: Ensure enabled and running "{{ firewall_service }}"
+      ansible.builtin.service:
+        name: "{{ firewall_service }}"
+        state: started
+        enabled: yes
+    
+    - name: Create index.html
+      ansible.builtin.copy:
+        dest: /var/www/html/index.html
+        content: "Example web content"
+
+    - name: permit traffic in default zone for "{{ web_service }}" service
+      ansible.posix.firewalld:
+        service: "{{ rule }}"
+        permanent: true
+        state: enabled
+        immediate: yes
+
+
+- name: Test Webserver
+  hosts: localhost
+  tasks:
+
+    - name: Test WebServer
+      ansible.builtin.uri:
+        url: http://vm-19-node1-ansible.example.com
+        method: GET
+        status_code: 200
